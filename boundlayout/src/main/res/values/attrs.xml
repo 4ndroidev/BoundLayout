@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="BoundLayout">
+        <attr name="orientation">
+            <enum name="horizontal" value="0" />
+            <enum name="vertical" value="1" />
+        </attr>
+        <attr name="displayMode">
+            <enum name="fixed" value="0" />
+            <enum name="scroll" value="1" />
+            <enum name="edge" value="2" />
+        </attr>
+    </declare-styleable>
+</resources>
