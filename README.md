@@ -1,8 +1,6 @@
 # BoundLayout
 
-[中文](https://github.com/4ndroidev/BoundLayout/blob/master/README_CN.md)
-
-## Introduction
+## Introduction [中文](https://github.com/4ndroidev/BoundLayout/blob/master/README_CN.md)
 
 In the abstract, the library supports bound-effect of all kinds of view which can scroll or can't scroll
 

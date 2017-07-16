@@ -1,6 +1,6 @@
 # BoundLayout
 
-## 介绍
+## 介绍 [English](https://github.com/4ndroidev/BoundLayout/blob/master/README.md)
 
 理论上，支持所有View的回弹效果，无论View是否能滚动
 
