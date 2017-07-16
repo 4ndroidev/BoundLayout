@@ -1,26 +1,24 @@
 # BoundLayout
 
-[中文](https://github.com/4ndroidev/BoundLayout/blob/master/README_CN.md)
+## 介绍
 
-## Introduction
+理论上，支持所有View的回弹效果，无论View是否能滚动
 
-In the abstract, the library supports bound-effect of all kinds of view which can scroll or can't scroll
-
-## Screenshot
+## 截图
 
 ![boundlayout.gif](https://github.com/4ndroidev/BoundLayout/blob/master/screenshot/boundlayout.gif)
 
-## Usage
+## 使用
 
-### step 1
+### 第一步
 
-add dependency :
+添加依赖 :
 
 	compile 'com.androidev:boundlayout:1.0.0'
 
-### step 2
+### 第二步
 
-modify your layout file, such as :
+修改布局文件，如下 :
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -53,16 +51,16 @@ modify your layout file, such as :
 </com.androidev.boundlayout.BoundLayout>
 ```
 
-## Settings
+## 设置
 
-> BoundLayout can host at most 3 children, header, content and footer respectively
+> BoundLayout 最多包含三个子View，分别是头部，内容，尾部
 
-orientation of BoundLayout: horizontal or vertical, default horizontal
+回弹方向(orientation): 横向和纵向, 默认横向
 
-displayMode of header and footer: fixed, scroll, edge
+头部尾部显示方式(displayMode): 固定, 滚动, 边缘
 
-|displayMode|description|
+|显示方式|描述|
 |---|---|
-|fixed|header/footer fixed at the edge of parent without any scrolling|
-|scroll|header/footer will scroll following the content|
-|edge|header/footer will scroll to appear then fix at the edge|
+|固定|头部/尾部 会固定在父组件的边缘，没有任何滚动动作|
+|滚动|头部/尾部 会跟随内容滚动|
+|边缘|头部/尾部 滚动出现后固定在父组件的边缘|
