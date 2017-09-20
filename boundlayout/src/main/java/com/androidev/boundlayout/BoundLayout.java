@@ -14,15 +14,16 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Transformation;
+import android.widget.FrameLayout;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class BoundLayout extends ViewGroup {
+public class BoundLayout extends FrameLayout {
 
     @IntDef({HORIZONTAL, VERTICAL})
     @Retention(RetentionPolicy.SOURCE)
-    public @interface OrientationMode {
+    private @interface OrientationMode {
     }
 
     public static final int HORIZONTAL = 0;
@@ -46,7 +47,8 @@ public class BoundLayout extends ViewGroup {
     private int mContentOffset;
     private int mOrientation;
     private int mActivePointerId;
-    private float mLastMotionValue;
+    private float mLastMotionX;
+    private float mLastMotionY;
     private boolean isBeingDragged;
     private Animation mBoundAnimation;
 
@@ -72,7 +74,7 @@ public class BoundLayout extends ViewGroup {
     private void bound(float interpolatedTime) {
         int targetValue = (mTotalOffset + (int) (-mTotalOffset * interpolatedTime));
         int lastValue = mOrientation == HORIZONTAL ? mContent.getLeft() : mContent.getTop();
-        offset(targetValue - lastValue);
+        offsetChildren(targetValue - lastValue);
     }
 
     private void init(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
@@ -134,7 +136,6 @@ public class BoundLayout extends ViewGroup {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        measureChildren(widthMeasureSpec, heightMeasureSpec);
     }
 
     @Override
@@ -228,7 +229,8 @@ public class BoundLayout extends ViewGroup {
                 if (pointerIndex < 0) {
                     return false;
                 }
-                mLastMotionValue = mOrientation == HORIZONTAL ? ev.getX(pointerIndex) : ev.getY(pointerIndex);
+                mLastMotionX = ev.getX(pointerIndex);
+                mLastMotionY = ev.getY(pointerIndex);
                 break;
 
             case MotionEvent.ACTION_MOVE:
@@ -268,15 +270,19 @@ public class BoundLayout extends ViewGroup {
                     return false;
                 }
                 startDragging(ev.getX(pointerIndex), ev.getY(pointerIndex));
-                float value = mOrientation == HORIZONTAL ? ev.getX(pointerIndex) : ev.getY(pointerIndex);
+                float x = ev.getX(pointerIndex);
+                float y = ev.getY(pointerIndex);
+                float value = mOrientation == HORIZONTAL ? x : y;
+                float lastValue = mOrientation == HORIZONTAL ? mLastMotionX : mLastMotionY;
                 if (isBeingDragged) {
-                    int offset = (int) ((value - mLastMotionValue) / DRAGGING_RESISTANCE);
+                    int offset = (int) ((value - lastValue) / DRAGGING_RESISTANCE);
                     if (mDirection == DIRECTION_POSITIVE && mContentOffset + offset < 0 ||
                             mDirection == DIRECTION_NEGATIVE && mContentOffset + offset > 0) {
                         offset = -mContentOffset;
                     }
-                    offset(offset);
-                    mLastMotionValue = value;
+                    offsetChildren(offset);
+                    mLastMotionX = x;
+                    mLastMotionY = y;
                 }
                 break;
             }
@@ -289,6 +295,28 @@ public class BoundLayout extends ViewGroup {
                 }
                 mActivePointerId = MotionEvent.INVALID_POINTER_ID;
                 return false;
+
+            case MotionEvent.ACTION_POINTER_DOWN: {
+                pointerIndex = ev.getActionIndex();
+                if (pointerIndex < 0) {
+                    return false;
+                }
+                mActivePointerId = ev.getPointerId(pointerIndex);
+                mLastMotionX = ev.getX(pointerIndex);
+                mLastMotionY = ev.getY(pointerIndex);
+                break;
+            }
+
+            case MotionEvent.ACTION_POINTER_UP:
+                pointerIndex = ev.getActionIndex();
+                int pointerId = ev.getPointerId(pointerIndex);
+                if (pointerId == mActivePointerId) {
+                    final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
+                    mActivePointerId = ev.getPointerId(newPointerIndex);
+                    mLastMotionX = ev.getX(newPointerIndex);
+                    mLastMotionY = ev.getY(newPointerIndex);
+                }
+                break;
         }
 
         return true;
@@ -316,16 +344,40 @@ public class BoundLayout extends ViewGroup {
 
     private void startDragging(float x, float y) {
         if (isBeingDragged) return;
-        float diff = (mOrientation == HORIZONTAL ? x : y) - mLastMotionValue;
-        if (diff > mTouchSlop && !canScroll(mContent, x, y, DIRECTION_NEGATIVE) ||
-                diff < -mTouchSlop && !canScroll(mContent, x, y, DIRECTION_POSITIVE)) {
-            mLastMotionValue = mLastMotionValue + (diff > 0 ? mTouchSlop : -mTouchSlop);
-            mDirection = diff > 0 ? DIRECTION_POSITIVE : DIRECTION_NEGATIVE;
-            isBeingDragged = true;
+        if (mOrientation == HORIZONTAL) {
+            startDraggingHorizontal(x, y);
+        } else {
+            startDraggingVertical(x, y);
         }
     }
 
-    private void offset(int offset) {
+    private void startDraggingHorizontal(float x, float y) {
+        float diffX = x - mLastMotionX;
+        float diffY = y - mLastMotionY;
+        if (Math.abs(diffX) < Math.abs(diffY)) return;
+        if (diffX > mTouchSlop && !canScroll(mContent, x, y, DIRECTION_NEGATIVE) ||
+                diffX < -mTouchSlop && !canScroll(mContent, x, y, DIRECTION_POSITIVE)) {
+            mLastMotionX = mLastMotionX + (diffX > 0 ? mTouchSlop : -mTouchSlop);
+            mDirection = diffX > 0 ? DIRECTION_POSITIVE : DIRECTION_NEGATIVE;
+            isBeingDragged = true;
+            requestDisallowInterceptTouchEvent(true);
+        }
+    }
+
+    private void startDraggingVertical(float x, float y) {
+        float diffX = x - mLastMotionX;
+        float diffY = y - mLastMotionY;
+        if (Math.abs(diffX) > Math.abs(diffY)) return;
+        if (diffY > mTouchSlop && !canScroll(mContent, x, y, DIRECTION_NEGATIVE) ||
+                diffY < -mTouchSlop && !canScroll(mContent, x, y, DIRECTION_POSITIVE)) {
+            mLastMotionY = mLastMotionY + (diffY > 0 ? mTouchSlop : -mTouchSlop);
+            mDirection = diffY > 0 ? DIRECTION_POSITIVE : DIRECTION_NEGATIVE;
+            isBeingDragged = true;
+            requestDisallowInterceptTouchEvent(true);
+        }
+    }
+
+    private void offsetChildren(int offset) {
         if (offset == 0) return;
         if (mOrientation == HORIZONTAL) {
             offsetHorizontal(offset);
@@ -409,6 +461,7 @@ public class BoundLayout extends ViewGroup {
     }
 
     private void setAnimationDuration() {
+        mTotalOffset = mContentOffset;
         float pivotDistance = mOrientation == HORIZONTAL ?
                 mTotalOffset > 0 ?
                         mHeader != null ? mHeader.getMeasuredWidth() : getMeasuredWidth() / 5 :
@@ -422,7 +475,6 @@ public class BoundLayout extends ViewGroup {
     }
 
     private void animateOffsetToZero() {
-        mTotalOffset = mContentOffset;
         setAnimationDuration();
         clearAnimation();
         startAnimation(mBoundAnimation);
@@ -472,6 +524,7 @@ public class BoundLayout extends ViewGroup {
         return new LayoutParams(getContext(), attrs);
     }
 
+    @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
     protected LayoutParams generateLayoutParams(ViewGroup.LayoutParams p) {
         if (p instanceof LayoutParams) {
@@ -480,11 +533,11 @@ public class BoundLayout extends ViewGroup {
         return new LayoutParams(p);
     }
 
-    public static class LayoutParams extends ViewGroup.LayoutParams {
+    public static class LayoutParams extends FrameLayout.LayoutParams {
 
         @IntDef({DISPLAY_MODE_FIXED, DISPLAY_MODE_SCROLL, DISPLAY_MODE_EDGE})
         @Retention(RetentionPolicy.SOURCE)
-        public @interface DisplayMode {
+        private @interface DisplayMode {
         }
 
         public static final int DISPLAY_MODE_FIXED = 0;
@@ -508,6 +561,7 @@ public class BoundLayout extends ViewGroup {
             super(p);
         }
 
+        @TargetApi(Build.VERSION_CODES.KITKAT)
         public LayoutParams(LayoutParams source) {
             super(source);
             displayMode = source.displayMode;
