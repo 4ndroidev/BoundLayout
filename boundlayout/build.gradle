@@ -31,7 +31,7 @@ dependencies {
 def siteUrl = 'https://github.com/4ndroidev/BoundLayout'    // project homepage
 def gitUrl = 'https://github.com/4ndroidev/BoundLayout.git' // project git
 
-version = "1.0.0"
+version = "1.1.0"
 group = "com.androidev"
 
 install {
@@ -86,7 +86,9 @@ artifacts {
 }
 
 Properties properties = new Properties()
-properties.load(project.rootProject.file('local.properties').newDataInputStream())
+
+if (file('local.properties').exists())
+    properties.load(project.rootProject.file('local.properties').newDataInputStream())
 
 bintray {
     user = properties.getProperty("bintray.user")
