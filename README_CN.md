@@ -2,6 +2,8 @@
 
 ## 介绍 [English](https://github.com/4ndroidev/BoundLayout/blob/master/README.md)
 
+[![Download](https://api.bintray.com/packages/4ndroidev/maven/BoundLayout/images/download.svg) ](https://bintray.com/4ndroidev/maven/BoundLayout/_latestVersion)
+
 理论上，支持所有View的回弹效果，无论View是否能滚动
 
 ## 截图
