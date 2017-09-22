@@ -14,7 +14,7 @@ In the abstract, the library supports bound-effect of all kinds of view which ca
 
 add dependency :
 
-	compile 'com.androidev:boundlayout:1.0.0'
+	compile 'com.androidev:boundlayout:1.1.0'
 
 ### step 2
 
